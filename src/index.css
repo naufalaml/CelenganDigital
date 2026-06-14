@@ -353,6 +353,11 @@ input[type="number"] {
   z-index: 100;
 }
 
+/* Hide bottom navigation when any modal overlay is active */
+.mobile-screen:has(.modal-overlay) .bottom-nav {
+  display: none !important;
+}
+
 .bottom-nav-item {
   display: flex;
   flex-direction: column;
