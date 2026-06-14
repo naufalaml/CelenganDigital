@@ -61,7 +61,7 @@ export const MobileFrame: React.FC<MobileFrameProps> = ({ children, theme, setTh
 
           {/* Status Bar */}
           <div 
-            className="flex items-center justify-between" 
+            className="flex items-center justify-between simulator-status-bar" 
             style={{ 
               padding: '12px 24px 4px 24px', 
               fontSize: '11px', 
@@ -83,7 +83,7 @@ export const MobileFrame: React.FC<MobileFrameProps> = ({ children, theme, setTh
 
           {/* Navigation/Action Header */}
           <div 
-            className="flex items-center justify-between" 
+            className="flex items-center justify-between app-header" 
             style={{ 
               padding: '8px 20px 12px 20px', 
               borderBottom: '1px solid var(--border-glass)',
