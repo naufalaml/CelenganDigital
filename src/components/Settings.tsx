@@ -9,7 +9,6 @@ interface SettingsProps {
   chartEndDate: string;
   onUpdateChartRange: (startDate: string, endDate: string) => void;
   onResetData: () => void;
-  onLoadDemoData: () => void;
   cashBalance: number;
   transactionsCount: number;
   goalsCount: number;
@@ -22,7 +21,6 @@ export const Settings: React.FC<SettingsProps> = ({
   chartEndDate,
   onUpdateChartRange,
   onResetData,
-  onLoadDemoData,
   cashBalance,
   transactionsCount,
   goalsCount
@@ -127,14 +125,27 @@ export const Settings: React.FC<SettingsProps> = ({
           
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Tanggal Berakhir (End Date)</label>
-            <input 
-              type="date" 
-              className="form-input" 
-              value={tempEndDate}
-              onChange={(e) => setTempEndDate(e.target.value)}
-              style={{ fontSize: '13px' }}
-              required
-            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                type="date" 
+                className="form-input" 
+                value={tempEndDate}
+                onChange={(e) => setTempEndDate(e.target.value)}
+                style={{ fontSize: '13px', flex: 1 }}
+                required
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '0 12px', fontSize: '12px', whiteSpace: 'nowrap', borderRadius: 'var(--radius-sm)' }}
+                onClick={() => {
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  setTempEndDate(todayStr);
+                }}
+              >
+                Hari Ini
+              </button>
+            </div>
           </div>
 
           {dateError && (
@@ -177,30 +188,6 @@ export const Settings: React.FC<SettingsProps> = ({
         </div>
       </div>
 
-      {/* Demo Data Card */}
-      <div className="glass-card flex flex-col gap-3" style={{ border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-        <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--success)' }}>
-          <span>💡</span>
-          <span>Simulasi / Demo Data</span>
-        </h3>
-        
-        <p className="text-xs text-tertiary">
-          Ingin menguji fitur dengan data simulasi? Klik tombol di bawah ini untuk mengisi grafik dan target tabungan dengan data contoh secara otomatis.
-        </p>
-
-        <button 
-          type="button" 
-          className="btn btn-success w-full flex items-center justify-center gap-2"
-          style={{ 
-            fontSize: '13px',
-            padding: '10px'
-          }}
-          onClick={onLoadDemoData}
-        >
-          <span>📥</span>
-          <span>Muat Data Contoh (Demo)</span>
-        </button>
-      </div>
 
       {/* Danger Zone Reset Data Card */}
       <div className="glass-card flex flex-col gap-3" style={{ border: '1px solid rgba(244, 63, 94, 0.2)' }}>

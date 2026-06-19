@@ -10,80 +10,6 @@ import { PermissionScreen } from './components/PermissionScreen';
 import type { Transaction, SavingsGoal } from './types';
 import { Home, Target, Plus, Receipt, Settings as SettingsIcon } from 'lucide-react';
 
-// Seed initial data if LocalStorage is empty
-const INITIAL_GOALS: SavingsGoal[] = [
-  {
-    id: 'goal-laptop',
-    name: 'Beli Laptop Baru',
-    targetAmount: 12000000,
-    currentAmount: 7500000,
-    targetDate: '2026-11-20',
-    icon: '💻',
-    color: '#6366f1' // Indigo
-  },
-  {
-    id: 'goal-darurat',
-    name: 'Dana Darurat',
-    targetAmount: 6000000,
-    currentAmount: 2000000,
-    targetDate: '2026-12-31',
-    icon: '🛡️',
-    color: '#10b981' // Emerald
-  }
-];
-
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'tx-1',
-    type: 'pemasukan',
-    amount: 10000000,
-    category: 'Gaji',
-    date: '2026-06-01',
-    note: 'Gaji Bulanan Juni'
-  },
-  {
-    id: 'tx-2',
-    type: 'pemasukan',
-    amount: 1500000,
-    category: 'Sampingan',
-    date: '2026-06-05',
-    note: 'Freelance Website Landing'
-  },
-  {
-    id: 'tx-3',
-    type: 'pengeluaran',
-    amount: 350000,
-    category: 'Makanan',
-    date: '2026-06-06',
-    note: 'Makan malam di restoran'
-  },
-  {
-    id: 'tx-4',
-    type: 'pengeluaran',
-    amount: 150000,
-    category: 'Transportasi',
-    date: '2026-06-08',
-    note: 'Ojek online & KRL'
-  },
-  {
-    id: 'tx-5',
-    type: 'tabungan',
-    amount: 2000000,
-    category: 'Dana Darurat',
-    date: '2026-06-10',
-    note: 'Alokasi tabungan rutin',
-    goalId: 'goal-darurat'
-  },
-  {
-    id: 'tx-6',
-    type: 'pengeluaran',
-    amount: 1200000,
-    category: 'Belanja',
-    date: '2026-06-12',
-    note: 'Beli baju kerja baru'
-  }
-];
-
 function App() {
   // Launch state machine: 'splash' | 'permissions' | 'ready'
   const [appState, setAppState] = useState<'splash' | 'permissions' | 'ready'>('splash');
@@ -169,13 +95,15 @@ function App() {
     window.location.reload();
   };
 
-  const handleLoadDemoData = () => {
-    localStorage.setItem('savings_goals', JSON.stringify(INITIAL_GOALS));
-    localStorage.setItem('transactions', JSON.stringify(INITIAL_TRANSACTIONS));
-    localStorage.setItem('settings_username', 'User Demo');
-    localStorage.setItem('app_permissions_granted', 'true');
-    window.location.reload();
-  };
+  // Auto-update chartEndDate to today if a new day has started
+  useEffect(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const lastOpened = localStorage.getItem('last_opened_date');
+    if (lastOpened !== todayStr) {
+      setChartEndDate(todayStr);
+      localStorage.setItem('last_opened_date', todayStr);
+    }
+  }, []);
 
   // Sync to LocalStorage
   useEffect(() => {
@@ -254,6 +182,11 @@ function App() {
     );
   };
 
+  // Update/Edit Goal handler
+  const handleUpdateGoal = (updatedGoal: SavingsGoal) => {
+    setGoals(prev => prev.map(g => g.id === updatedGoal.id ? updatedGoal : g));
+  };
+
   // Allot Cash to Savings Goal handler
   const handleAllotMoney = (goalId: string, amount: number) => {
     const goal = goals.find(g => g.id === goalId);
@@ -301,6 +234,7 @@ function App() {
             goals={goals} 
             onAddGoal={handleAddGoal} 
             onDeleteGoal={handleDeleteGoal} 
+            onUpdateGoal={handleUpdateGoal}
             onAllotMoney={handleAllotMoney}
             cashBalance={cashBalance}
           />
@@ -324,7 +258,6 @@ function App() {
               setChartEndDate(end);
             }}
             onResetData={handleResetData}
-            onLoadDemoData={handleLoadDemoData}
             cashBalance={cashBalance}
             transactionsCount={transactions.length}
             goalsCount={goals.length}

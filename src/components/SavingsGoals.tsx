@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Calendar, Award } from 'lucide-react';
+import { Plus, Trash2, Calendar, Award, Edit } from 'lucide-react';
 import type { SavingsGoal } from '../types';
 import { formatRupiah } from './Dashboard';
 
@@ -7,6 +7,7 @@ interface SavingsGoalsProps {
   goals: SavingsGoal[];
   onAddGoal: (goal: Omit<SavingsGoal, 'id' | 'currentAmount'>) => void;
   onDeleteGoal: (id: string) => void;
+  onUpdateGoal: (goal: SavingsGoal) => void;
   onAllotMoney: (goalId: string, amount: number) => void;
   cashBalance: number;
 }
@@ -15,6 +16,7 @@ export const SavingsGoals: React.FC<SavingsGoalsProps> = ({
   goals, 
   onAddGoal, 
   onDeleteGoal, 
+  onUpdateGoal,
   onAllotMoney,
   cashBalance
 }) => {
@@ -31,6 +33,126 @@ export const SavingsGoals: React.FC<SavingsGoalsProps> = ({
   // Allotment State
   const [allotAmount, setAllotAmount] = useState('');
   const [allotError, setAllotError] = useState('');
+
+  // Edit Goal States
+  const [editGoal, setEditGoal] = useState<SavingsGoal | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editTargetAmount, setEditTargetAmount] = useState('');
+  const [editTargetDate, setEditTargetDate] = useState('');
+  const [editIcon, setEditIcon] = useState('🎯');
+  const [editColor, setEditColor] = useState('#6366f1');
+
+  const handleStartEdit = (goal: SavingsGoal) => {
+    setEditGoal(goal);
+    setEditName(goal.name);
+    setEditTargetAmount(goal.targetAmount.toString());
+    setEditTargetDate(goal.targetDate);
+    setEditIcon(goal.icon);
+    setEditColor(goal.color);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editGoal || !editName || !editTargetAmount || !editTargetDate) return;
+
+    onUpdateGoal({
+      ...editGoal,
+      name: editName,
+      targetAmount: parseFloat(editTargetAmount),
+      targetDate: editTargetDate,
+      icon: editIcon,
+      color: editColor
+    });
+
+    setEditGoal(null);
+  };
+
+  // Image Compressor & Base64 Converter
+  const compressAndSetImage = (file: File, isEdit: boolean) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 120;
+        const MAX_HEIGHT = 120;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75); // JPEG compression at 75% quality
+          if (isEdit) {
+            setEditIcon(compressedBase64);
+          } else {
+            setIcon(compressedBase64);
+          }
+        }
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Helper for dynamic savings calculation
+  const getSavingsTargetCalculationInfo = (amountStr: string, dateStr: string) => {
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0 || !dateStr) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(dateStr);
+    target.setHours(0, 0, 0, 0);
+
+    const diffTime = target.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+      return (
+        <div style={{ padding: '8px 12px', background: 'var(--danger-glow)', color: 'var(--danger)', borderRadius: '8px', fontSize: '11px', fontWeight: 600, marginTop: '4px' }}>
+          Tanggal target harus di hari esok atau setelahnya.
+        </div>
+      );
+    }
+
+    const daily = amount / diffDays;
+    const monthly = amount / Math.max(1, diffDays / 30.4);
+
+    return (
+      <div className="glass-card" style={{ padding: '10px 14px', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-glass)', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+        <span className="text-xs font-bold text-tertiary" style={{ textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>Estimasi Kebutuhan Tabungan</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '12px', fontWeight: 600 }}>
+          <div className="flex justify-between">
+            <span className="text-secondary" style={{ fontWeight: 500 }}>Waktu tersisa:</span>
+            <span className="text-primary-color">{diffDays} hari</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-secondary" style={{ fontWeight: 500 }}>Tabungan Harian:</span>
+            <span className="text-success">{formatRupiah(daily)} / hari</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-secondary" style={{ fontWeight: 500 }}>Tabungan Bulanan:</span>
+            <span className="text-success">{formatRupiah(monthly)} / bulan</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +259,26 @@ export const SavingsGoals: React.FC<SavingsGoalsProps> = ({
             
             return (
               <div key={g.id} className="glass-card flex flex-col gap-3" style={{ position: 'relative' }}>
+                {/* Edit icon */}
+                <button
+                  onClick={() => handleStartEdit(g)}
+                  style={{
+                    position: 'absolute',
+                    top: '18px',
+                    right: '44px',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-tertiary)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    zIndex: 5
+                  }}
+                  className="btn-text"
+                  aria-label="Edit Goal"
+                >
+                  <Edit size={16} />
+                </button>
+
                 {/* Delete icon */}
                 <button
                   onClick={() => {
@@ -152,7 +294,8 @@ export const SavingsGoals: React.FC<SavingsGoalsProps> = ({
                     border: 'none',
                     color: 'var(--text-tertiary)',
                     cursor: 'pointer',
-                    padding: '4px'
+                    padding: '4px',
+                    zIndex: 5
                   }}
                   className="btn-text"
                   aria-label="Delete Goal"
@@ -166,13 +309,23 @@ export const SavingsGoals: React.FC<SavingsGoalsProps> = ({
                     style={{ 
                       backgroundColor: `${g.color}15`, 
                       color: g.color,
-                      fontSize: '22px',
+                      fontSize: g.icon.startsWith('data:image/') ? '0px' : '22px',
                       width: '46px',
                       height: '46px',
-                      borderRadius: 'var(--radius-sm)'
+                      borderRadius: 'var(--radius-sm)',
+                      overflow: 'hidden',
+                      padding: 0
                     }}
                   >
-                    {g.icon}
+                    {g.icon.startsWith('data:image/') ? (
+                      <img 
+                        src={g.icon} 
+                        alt={g.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                    ) : (
+                      g.icon
+                    )}
                   </div>
                   <div>
                     <h3 className="text-base font-bold flex items-center gap-1">
@@ -292,10 +445,81 @@ export const SavingsGoals: React.FC<SavingsGoalsProps> = ({
                 />
               </div>
 
+              {/* Dynamic calculations display */}
+              {getSavingsTargetCalculationInfo(targetAmount, targetDate)}
+
               {/* Icon Selector */}
-              <div className="form-group">
-                <label className="form-label">Pilih Ikon</label>
-                <div className="flex gap-2" style={{ overflowX: 'auto', padding: '4px 0' }}>
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label className="form-label">Pilih Ikon / Upload Foto</label>
+                <div className="flex gap-2" style={{ overflowX: 'auto', padding: '4px 0', alignItems: 'center' }}>
+                  {/* Photo Upload Button */}
+                  <label 
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: 'var(--text-secondary)',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--bg-tertiary)',
+                      border: '1.5px dashed var(--border-glass)',
+                      cursor: 'pointer',
+                      height: '42px',
+                      minWidth: '70px',
+                      textAlign: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <span>📷 Upload</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) compressAndSetImage(file, false);
+                      }} 
+                      style={{ display: 'none' }} 
+                    />
+                  </label>
+
+                  {/* Photo Preview & Revert */}
+                  {icon.startsWith('data:image/') && (
+                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                      <img 
+                        src={icon} 
+                        alt="Preview" 
+                        style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '8px', border: '2px solid var(--primary)' }} 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIcon('🎯')}
+                        style={{
+                          position: 'absolute',
+                          top: '-4px',
+                          right: '-4px',
+                          width: '14px',
+                          height: '14px',
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--danger)',
+                          color: 'white',
+                          border: 'none',
+                          fontSize: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          zIndex: 10
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
                   {emojiList.map(emoji => (
                     <button
                       key={emoji}
@@ -308,7 +532,8 @@ export const SavingsGoals: React.FC<SavingsGoalsProps> = ({
                         border: '2px solid transparent',
                         backgroundColor: icon === emoji ? 'var(--primary-glow)' : 'var(--bg-tertiary)',
                         borderColor: icon === emoji ? 'var(--primary)' : 'transparent',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        flexShrink: 0
                       }}
                     >
                       {emoji}
@@ -383,6 +608,182 @@ export const SavingsGoals: React.FC<SavingsGoalsProps> = ({
 
               <button type="submit" className="btn btn-success w-full">
                 Allokasikan Ke Tabungan
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Goal Modal Sheet */}
+      {editGoal && (
+        <div className="modal-overlay" onClick={() => setEditGoal(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center" style={{ marginBottom: '18px' }}>
+              <h2 className="text-lg font-bold">Edit Target Tabungan</h2>
+              <button className="btn btn-text" onClick={() => setEditGoal(null)} style={{ padding: '4px' }}>Batal</button>
+            </div>
+
+            <form onSubmit={handleEditSubmit}>
+              <div className="form-group">
+                <label className="form-label">Nama Impian</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Misal: Beli Laptop Baru" 
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Nominal Target (Rupiah)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  placeholder="Misal: 5000000" 
+                  value={editTargetAmount}
+                  onChange={(e) => setEditTargetAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Target Tanggal Tercapai</label>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  value={editTargetDate}
+                  onChange={(e) => setEditTargetDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  required
+                />
+              </div>
+
+              {/* Dynamic calculations display */}
+              {getSavingsTargetCalculationInfo(editTargetAmount, editTargetDate)}
+
+              {/* Icon Selector */}
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label className="form-label">Pilih Ikon / Upload Foto</label>
+                <div className="flex gap-2" style={{ overflowX: 'auto', padding: '4px 0', alignItems: 'center' }}>
+                  {/* Photo Upload Button */}
+                  <label 
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: 'var(--text-secondary)',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--bg-tertiary)',
+                      border: '1.5px dashed var(--border-glass)',
+                      cursor: 'pointer',
+                      height: '42px',
+                      minWidth: '70px',
+                      textAlign: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <span>📷 Upload</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) compressAndSetImage(file, true);
+                      }} 
+                      style={{ display: 'none' }} 
+                    />
+                  </label>
+
+                  {/* Photo Preview & Revert */}
+                  {editIcon.startsWith('data:image/') && (
+                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
+                      <img 
+                        src={editIcon} 
+                        alt="Preview" 
+                        style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '8px', border: '2px solid var(--primary)' }} 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEditIcon('🎯')}
+                        style={{
+                          position: 'absolute',
+                          top: '-4px',
+                          right: '-4px',
+                          width: '14px',
+                          height: '14px',
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--danger)',
+                          color: 'white',
+                          border: 'none',
+                          fontSize: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          zIndex: 10
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
+                  {emojiList.map(emoji => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => setEditIcon(emoji)}
+                      style={{
+                        fontSize: '20px',
+                        padding: '8px',
+                        borderRadius: '8px',
+                        border: '2px solid transparent',
+                        backgroundColor: editIcon === emoji ? 'var(--primary-glow)' : 'var(--bg-tertiary)',
+                        borderColor: editIcon === emoji ? 'var(--primary)' : 'transparent',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Selector */}
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label className="form-label">Pilih Warna Aksen</label>
+                <div className="flex gap-3">
+                  {colorList.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setEditColor(c)}
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        backgroundColor: c,
+                        border: '3px solid transparent',
+                        borderColor: editColor === c ? 'var(--text-primary)' : 'transparent',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                      }}
+                      aria-label={`Select color ${c}`}
+                    ></button>
+                  ))}
+                </div>
+              </div>
+
+              <button type="submit" className="btn btn-primary w-full">
+                Simpan Perubahan
               </button>
             </form>
           </div>
