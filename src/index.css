@@ -20,12 +20,18 @@
   --bg-primary: #f6f8fc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
-  --bg-glass: rgba(255, 255, 255, 0.5);
-  --bg-glass-nav: rgba(255, 255, 255, 0.85);
-  --bg-glass-hover: rgba(255, 255, 255, 0.65);
-  --border-glass: rgba(226, 232, 240, 0.8);
+  --bg-glass: rgba(255, 255, 255, 0.42);
+  --bg-glass-nav: rgba(255, 255, 255, 0.88);
+  --bg-glass-hover: rgba(255, 255, 255, 0.55);
+  --border-glass: rgba(255, 255, 255, 0.45);
   --border-focus: #6366f1;
-  --border-glow: rgba(99, 102, 241, 0.15);
+  --border-glow: rgba(99, 102, 241, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.03), 0 4px 8px 0 rgba(0, 0, 0, 0.02);
+  --glass-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.65), inset 0 -1px 0 0 rgba(0, 0, 0, 0.04);
+  --success-glass-bg: rgba(16, 185, 129, 0.08);
+  --success-glass-border: rgba(16, 185, 129, 0.2);
+  --danger-glass-bg: rgba(244, 63, 94, 0.08);
+  --danger-glass-border: rgba(244, 63, 94, 0.2);
   
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -61,12 +67,18 @@
   --bg-primary: #08090d;
   --bg-secondary: #0f1016;
   --bg-tertiary: #171821;
-  --bg-glass: rgba(15, 16, 22, 0.45);
-  --bg-glass-nav: rgba(15, 16, 22, 0.85);
-  --bg-glass-hover: rgba(23, 24, 33, 0.55);
-  --border-glass: rgba(255, 255, 255, 0.05);
+  --bg-glass: rgba(15, 16, 22, 0.55);
+  --bg-glass-nav: rgba(15, 16, 22, 0.88);
+  --bg-glass-hover: rgba(23, 24, 33, 0.65);
+  --border-glass: rgba(255, 255, 255, 0.09);
   --border-focus: #818cf8;
-  --border-glow: rgba(129, 140, 248, 0.3);
+  --border-glow: rgba(129, 140, 248, 0.35);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25), 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+  --glass-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.16), inset 0 -1px 0 0 rgba(0, 0, 0, 0.2);
+  --success-glass-bg: rgba(52, 211, 153, 0.08);
+  --success-glass-border: rgba(52, 211, 153, 0.2);
+  --danger-glass-bg: rgba(251, 113, 133, 0.08);
+  --danger-glass-border: rgba(251, 113, 133, 0.2);
   
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
@@ -319,18 +331,19 @@ input[type="number"] {
 /* Glassmorphism Card Style */
 .glass-card {
   background: var(--bg-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
   padding: 18px;
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--glass-inset), var(--glass-shadow);
   transition: background-color var(--transition-normal), border-color var(--transition-normal), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .glass-card:hover {
   background: var(--bg-glass-hover);
   border-color: var(--border-glow);
+  box-shadow: var(--glass-inset), var(--glass-shadow), 0 0 15px var(--border-glow);
 }
 
 .glass-card-interactive:active {
@@ -681,16 +694,21 @@ input[type="number"] {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .stats-card.pemasukan {
-  background-color: var(--success-glow);
-  border: 1px solid rgba(16, 185, 129, 0.08);
+  background-color: var(--success-glass-bg);
+  border: 1px solid var(--success-glass-border);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), var(--glass-shadow);
 }
 
 .stats-card.pengeluaran {
-  background-color: var(--danger-glow);
-  border: 1px solid rgba(244, 63, 94, 0.08);
+  background-color: var(--danger-glass-bg);
+  border: 1px solid var(--danger-glass-border);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), var(--glass-shadow);
 }
 
 /* Badge styles */

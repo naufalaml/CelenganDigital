@@ -346,12 +346,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div 
         className="glass-card flex flex-col justify-between" 
         style={{ 
-          background: 'var(--primary-gradient)', 
+          background: theme === 'dark' 
+            ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.28) 0%, rgba(79, 70, 229, 0.22) 100%)' 
+            : 'linear-gradient(135deg, rgba(99, 102, 241, 0.85) 0%, rgba(79, 70, 229, 0.9) 100%)', 
           color: 'white',
-          border: 'none',
+          border: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(255, 255, 255, 0.25)',
           padding: '24px',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 12px 28px rgba(99, 102, 241, 0.25)',
+          boxShadow: theme === 'dark'
+            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 12px 30px rgba(0, 0, 0, 0.25)'
+            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 12px 28px rgba(99, 102, 241, 0.22)',
           position: 'relative',
           overflow: 'hidden'
         }}
