@@ -8,6 +8,7 @@ import { Settings } from './components/Settings';
 import { SplashScreen } from './components/SplashScreen';
 import { PermissionScreen } from './components/PermissionScreen';
 import type { Transaction, SavingsGoal } from './types';
+import { scheduleDailyNotifications } from './utils/notifications';
 import { Home, Target, Plus, Receipt, Settings as SettingsIcon } from 'lucide-react';
 
 function App() {
@@ -104,6 +105,13 @@ function App() {
       localStorage.setItem('last_opened_date', todayStr);
     }
   }, []);
+
+  // Schedule daily notifications when app is ready
+  useEffect(() => {
+    if (appState === 'ready') {
+      scheduleDailyNotifications();
+    }
+  }, [appState]);
 
   // Sync to LocalStorage
   useEffect(() => {
