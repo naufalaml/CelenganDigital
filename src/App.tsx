@@ -8,7 +8,7 @@ import { Settings } from './components/Settings';
 import { SplashScreen } from './components/SplashScreen';
 import { PermissionScreen } from './components/PermissionScreen';
 import type { Transaction, SavingsGoal } from './types';
-import { scheduleDailyNotifications } from './utils/notifications';
+import { scheduleDailyNotifications, triggerWelcomeNotification } from './utils/notifications';
 import { Home, Target, Plus, Receipt, Settings as SettingsIcon } from 'lucide-react';
 
 function App() {
@@ -27,6 +27,7 @@ function App() {
   const handlePermissionGranted = () => {
     localStorage.setItem('app_permissions_granted', 'true');
     setAppState('ready');
+    triggerWelcomeNotification();
   };
 
   // Theme State
