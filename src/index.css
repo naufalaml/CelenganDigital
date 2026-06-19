@@ -560,6 +560,7 @@ input[type="number"] {
   border: 2px solid transparent;
   cursor: pointer;
   transition: all var(--transition-fast);
+  color: var(--text-secondary);
 }
 
 .category-pill:hover {
@@ -572,6 +573,7 @@ input[type="number"] {
   border-color: var(--primary);
   transform: scale(1.05);
   box-shadow: var(--glow-shadow);
+  color: var(--text-primary);
 }
 
 .category-icon-wrapper {
