@@ -45,7 +45,8 @@ export const triggerWelcomeNotification = async () => {
         title: "CelenganDigital 🎉",
         body: "Halo! Selamat aplikasi sudah ter-install, jangan lupa rutin nabung ya! 😉",
         schedule: { at: new Date(Date.now() + 1000) }, // Trigger 1 second later
-        sound: 'default'
+        sound: 'default',
+        smallIcon: 'ic_notification'
       }]
     });
     console.log('Successfully scheduled welcome notification');
@@ -102,7 +103,8 @@ export const scheduleDailyNotifications = async () => {
           title: `Waktunya Nabung! ${slot.label}`,
           body: quote,
           schedule: { at: scheduleDate },
-          sound: 'default'
+          sound: 'default',
+          smallIcon: 'ic_notification'
         });
       }
     }
